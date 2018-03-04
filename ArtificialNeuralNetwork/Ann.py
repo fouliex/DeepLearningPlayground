@@ -52,6 +52,7 @@ Make the ANN
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.layers import Dropout
 
 # Initialize the ANN
 classifier = Sequential()
@@ -190,9 +191,67 @@ mean = accuracies.mean()
 variance = accuracies.std()
 
 
+"""
+Improving the ANN
+Dropout Regularization to reduce overfitting if needed
 
+Overfitting is when the model was train too much on the training set, too much that
+it becomes less performance on the test set. We can observe this when we have a lagrge
+difference of accuracies between the trainning set and test set. Generally when overfiting
+happens we have a much higher accuracy on the training sets than the test set.
+Another way to detect overfitting is when we observe a high variance when 
+applying 4 Cross-Validation, the trainin set learn too much.
+
+"""
     
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import GridSearchCV
+from keras.models import Sequential
+from keras.layers import Dense
 
+def build_classifier(optimizer):
+    classifier = Sequential()
+    classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu', input_dim = 11))
+    #p
+    # Fraction of the input units to drop.For example if we have 10 neurons and we choose 0.1(10%) then that means 
+    # that at each iteration 1 neuron will be disabled. If it's 0.2(20%) 2 neurons will be disable.
+    
+    #classifier.add(Dropout(p=0.1))
+    classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu'))
+    classifier.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
+    classifier.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
+    return classifier
 
+classifier = KerasClassifier(build_fn = build_classifier)
 
+"""
+Parameter Tuning with Grid search
+
+"""
+    
+# Tuning the ANN
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import GridSearchCV
+from keras.models import Sequential
+from keras.layers import Dense
+
+def build_classifier(optimizer):
+    classifier = Sequential()
+    classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu', input_dim = 11))
+    #p
+    # Fraction of the input units to drop.For example if we have 10 neurons and we choose 0.1(10%) then that means 
+    # that at each iteration 1 neuron will be disabled. If it's 0.2(20%) 2 neurons will be disable.
+    
+    #classifier.add(Dropout(p=0.1))
+    classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu'))
+    classifier.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
+    classifier.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
+    return classifier
+
+classifier = KerasClassifier(build_fn = build_classifier)
+parameters = {'batch_size': [25, 32],'epochs': [100, 500],'optimizer': ['adam', 'rmsprop']}
+grid_search = GridSearchCV(estimator = classifier,param_grid = parameters,scoring = 'accuracy',cv = 10)
+grid_search = grid_search.fit(X_train, y_train)
+best_parameters = grid_search.best_params_
+best_accuracy = grid_search.best_score_
 
